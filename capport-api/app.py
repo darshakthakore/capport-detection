@@ -60,10 +60,14 @@ def request_wants_json():
 ## Check if the identity (the mac or IP or something else) is in the chilli sessions
 def check_identity(identity, id_type):
     try:
-        chilli_sessions = check_output(["sudo" "chilli_query" "/usr/local/var/run/chilli.eth0.sock" "list"])
+        chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.eth0.sock list", shell=True)
+
         return True
     except CalledProcessError:
         return False
+
+
+
 
 
 
@@ -233,6 +237,9 @@ def get_sessions(session_uuid):
         return (json.dumps({ "error": "invalid session" }), 500)
 
     return session_status(session)
+
+# @app.route('/capport/sessions/<string:session_uuid>',methods=['POST'] )
+
 
 # When the client wants to explicitly leave the network, delete the href for the session:
 # DELETE http://<server>/capport/sessions/<session_uuid>
