@@ -63,7 +63,9 @@ def check_identity(identity, id_type):
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.br-capport.sock list", shell=True)
         if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
             activate = "sudo chilli_query authorize " + id_type + " " + identity
+	    #print "trying to activate with: " + activate 
             activated = call(activate, shell=True)
+	    #print "result of activation call: "
             return True
         else:
             return False
