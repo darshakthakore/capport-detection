@@ -62,16 +62,19 @@ def check_identity(identity, id_type):
     try:
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.br-capport.sock list", shell=True)
         if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
-            activate = "sudo chilli_query authorize " + id_type + " " + identity
-	    #print "trying to activate with: " + activate 
+            activate = "sudo chilli_query authorize " + id_type + " " + identity + "maxbwup 1000 " + "maxbwdown 1000 "
+            #print "trying to activate with: " + activate
             activated = call(activate, shell=True)
-	    #print "result of activation call: "
+            #print "result of activation call: "
             return True
         else:
             return False
     except CalledProcessError:
         print "exception called"
         return False
+
+def check_credentials():
+    return True
 
 ## Logoff the station in the chilli portal
 def logoff_identity(identity, id_type):
