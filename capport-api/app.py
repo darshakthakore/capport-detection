@@ -7,6 +7,8 @@ import model.database
 import model.session
 import model.requirement
 
+from subprocess import check_output, CalledProcessError
+
 app = Flask(__name__)
 
 ####################
@@ -54,6 +56,16 @@ def request_wants_json():
     return best == 'application/json' and \
         request.accept_mimetypes[best] > \
         request.accept_mimetypes['text/html']
+
+## Check if the identity (the mac or IP or something else) is in the chilli sessions
+def check_identity(identity, id_type):
+    try:
+        chilli_sessions = check_output(["sudo" "chilli_query" "/usr/local/var/run/chilli.eth0.sock" "list"])
+        return True
+    except CalledProcessError:
+        return False
+
+
 
 ####################
 ## captive portal ##
@@ -160,11 +172,23 @@ def post_sessions():
     ## get post data
     json_request = request.get_json(force=True)
     if (json_request is None):
-        return (json.dumps({ "error": "invalid json payload" }), 500)
+        return (json.dumps({ "error": "invalid json payload" }), 400)
 
     ## get identity from
     if not ('identity' in json_request):
-        return (json.dumps({ "error": "identity missing" }), 500)
+        return (json.dumps({ "error": "identity missing" }), 400)
+    else:
+        identity = json_request['identity']
+
+    ## get the type of identity
+    if not ('id_type' in json_request):
+        return (json.dumps({"error": "identity type missing"}), 400)
+    else:
+        id_type = json_request['id_type']
+
+    ## only create a new session if the identity matches up with
+    ## a session in the captive portal enforcer
+    check_identity(identity, id_type)
 
     ## create a new session for this identity
     session = model.session.newSession(json_request['identity'])
