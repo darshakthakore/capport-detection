@@ -11,6 +11,7 @@ class Session:
         self.requirements = []
         self.expire = 0
         self.datalimit = 0
+        self.id_type = "mac"
         return
 
     ## getId will return the uuid of this session.
@@ -69,6 +70,15 @@ class Session:
     ## getDataLimit will return the maximum bytes this session is allowed to consume.
     def getDataLimit(self):
         return self.datalimit
+
+    ## store the identity type sent by the client
+    def setIdType(self, id_type):
+        self.id_type = id_type
+        return
+
+    ## retrive the type of identity stored
+    def getIdType(self):
+        return self.id_type
 
     ## isDepleated will check if the datalimit has been crossed given current usage.
     def isDepleated(self,usage):

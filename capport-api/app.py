@@ -7,7 +7,7 @@ import model.database
 import model.session
 import model.requirement
 
-from subprocess import check_output, CalledProcessError
+from subprocess import call, check_output, CalledProcessError
 
 app = Flask(__name__)
 
@@ -62,14 +62,25 @@ def check_identity(identity, id_type):
     try:
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.br-capport.sock list", shell=True)
         if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
-            activate = "sudo chilli_query activate " + id_type + identity
-            activated = check_output(activate, shell=True)
+            activate = "sudo chilli_query authorize " + id_type + " " + identity
+            activated = call(activate, shell=True)
             return True
         else:
             return False
     except CalledProcessError:
         print "exception called"
         return False
+
+## Logoff the station in the chilli portal
+def logoff_identity(identity, id_type):
+    try:
+        deactivate = "sudo chilli_query logoff " + id_type + " " + identity
+        deactivated = call(deactivate, shell=True)
+        return True
+    except CalledProcessError:
+        print "could not deactivate"
+        return False
+
 
 
 ####################
@@ -219,6 +230,8 @@ def post_sessions():
     session.setExpire(time.time()+3600) # let's do 1 hour...
     session.setDataLimit(10000000) # let's do 10000000 bytes...
 
+    session.setIdType(id_type)
+
     ## store in redis
     session.store()
 
@@ -250,6 +263,9 @@ def delete_sessions(session_uuid):
     session = model.session.loadSession(session_uuid)
     if (session is None):
         return (json.dumps({ "error": "invalid session" }), 500)
+
+    ## logoff the chilli portal session
+    logoff_identity(session.getIdentity(), session.getIdType())
 
     ## delete the session
     session.delete()
