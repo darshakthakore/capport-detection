@@ -60,7 +60,7 @@ def request_wants_json():
 ## Check if the identity (the mac or IP or something else) is in the chilli sessions
 def check_identity(identity, id_type):
     try:
-        chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.eth0.sock list", shell=True)
+        chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.br-capport.sock list", shell=True)
         if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
             activate = "sudo chilli_query activate " + id_type + identity
             activated = check_output(activate, shell=True)
@@ -68,6 +68,7 @@ def check_identity(identity, id_type):
         else:
             return False
     except CalledProcessError:
+        print "exception called"
         return False
 
 
