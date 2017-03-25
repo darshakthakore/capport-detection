@@ -61,7 +61,7 @@ def request_wants_json():
 def check_identity(identity, id_type):
     try:
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.eth0.sock list", shell=True)
-        if identity in chilli_sessions.split() and id_type in ["mac", "ip"]:
+        if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
             activate = "sudo chilli_query activate " + id_type + identity
             activated = check_output(activate, shell=True)
             return True
@@ -169,7 +169,7 @@ def capport():
 
 # Posting to the create_href:
 # POST http://<server>/capport/sessions (Accept: application/json)
-# { "identity": "<USERNAME>"}
+# { "identity": "USERNAME|IP|MAC", "id_type": "username|mac|ip"}
 # 200 OK
 @app.route('/capport/sessions',methods = ['POST'] )
 def post_sessions():
@@ -192,7 +192,7 @@ def post_sessions():
 
     ## only create a new session if the identity matches up with
     ## a session in the captive portal enforcer
-    if not (check_identity(identity, id_type)):
+    if (check_identity(identity, id_type) == False):
         return (json.dumps({"error": "client session not initiated"}), 400)
 
     ## create a new session for this identity
