@@ -61,14 +61,14 @@ def request_wants_json():
 def check_identity(identity, id_type):
     try:
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.eth0.sock list", shell=True)
-
-        return True
+        if identity in chilli_sessions.split() and id_type in ["mac", "ip"]:
+            activate = "sudo chilli_query activate " + id_type + identity
+            activated = check_output(activate, shell=True)
+            return True
+        else:
+            return False
     except CalledProcessError:
         return False
-
-
-
-
 
 
 ####################
@@ -192,7 +192,8 @@ def post_sessions():
 
     ## only create a new session if the identity matches up with
     ## a session in the captive portal enforcer
-    check_identity(identity, id_type)
+    if not (check_identity(identity, id_type)):
+        return (json.dumps({"error": "client session not initiated"}), 400)
 
     ## create a new session for this identity
     session = model.session.newSession(json_request['identity'])
@@ -237,8 +238,6 @@ def get_sessions(session_uuid):
         return (json.dumps({ "error": "invalid session" }), 500)
 
     return session_status(session)
-
-# @app.route('/capport/sessions/<string:session_uuid>',methods=['POST'] )
 
 
 # When the client wants to explicitly leave the network, delete the href for the session:
