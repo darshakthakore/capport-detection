@@ -27,7 +27,8 @@ def enable_traffic(identity):
 
 ## enable_traffic used by the api
 def enable_traffic(identity, id_type):
-    activate = "sudo chilli_query authorize " + id_type + " " + identity + "maxbwup 1000 " + "maxbwdown 1000 "
+    print identity, id_type
+    activate = "sudo chilli_query authorize " + id_type + " " + identity + " maxbwup 1000 " + "maxbwdown 1000 "
     activated = call(activate, shell=True)
     return
 
