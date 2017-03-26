@@ -314,6 +314,8 @@ def login_sessions(session_uuid):
     mypass = password[::-1]
     if (username == password):
         enable_traffic(session.getIdentity(), session.getIdType())
+    else:
+        return (json.dumps({"error": "credentials provided are incorrect"}), 401)
 
     return session_status(session)
 
