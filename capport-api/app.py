@@ -25,14 +25,21 @@ def enable_traffic(identity):
     ## TODO: all requirements are met, signal pcef?
     return
 
+## enable_traffic used by the api
+def enable_traffic(identity, id_type):
+    activate = "sudo chilli_query authorize " + id_type + " " + identity + "maxbwup 1000 " + "maxbwdown 1000 "
+    activated = call(activate, shell=True)
+    return
+
 ## session_status will return the current state of the session as a json
 ## object.
-def session_status(session):
+def session_status(session, retcode=200):
     usage = get_usage(session.getIdentity())
     struct = {
         "id": { "uuid": session.getId(),
                 "href": request.url_root+"capport/sessions/"+session.getId() },
         "identity": session.getIdentity(),
+        "cred_api_url": request.url_root+"capport/login/"+session.getId(),
         "state": { "permitted": bool(session.isPermitted(usage)) }
     }
 
@@ -46,7 +53,7 @@ def session_status(session):
     struct['requirements'] = []
     for i in range(len(reqs)):
         struct['requirements'].append({ reqs[i].getType(): reqs[i].getUrl() })
-    return (json.dumps(struct),201)
+    return (json.dumps(struct), retcode)
 
 ## request_wants_json will check the accept headers to determine wether a
 ## json response is more appropriate.
@@ -62,9 +69,9 @@ def check_identity(identity, id_type):
     try:
         chilli_sessions = check_output("sudo chilli_query /usr/local/var/run/chilli.br-capport.sock list", shell=True)
         if identity in chilli_sessions.split() and id_type in ["username", "mac", "ip"]:
-            activate = "sudo chilli_query authorize " + id_type + " " + identity + "maxbwup 1000 " + "maxbwdown 1000 "
+            #activate = "sudo chilli_query authorize " + id_type + " " + identity + "maxbwup 1000 " + "maxbwdown 1000 "
             #print "trying to activate with: " + activate
-            activated = call(activate, shell=True)
+            #activated = call(activate, shell=True)
             #print "result of activation call: "
             return True
         else:
@@ -73,8 +80,6 @@ def check_identity(identity, id_type):
         print "exception called"
         return False
 
-def check_credentials():
-    return True
 
 ## Logoff the station in the chilli portal
 def logoff_identity(identity, id_type):
@@ -240,7 +245,7 @@ def post_sessions():
     ## store in redis
     session.store()
 
-    return session_status(session)
+    return session_status(session, 201)
 
 # The session now exists, and GET works:
 # GET http://<server>/capport/sessions/<session_uuid> (Accept: application/json)
@@ -306,6 +311,11 @@ def login_sessions(session_uuid):
     else:
         password = json_request['password']
 
+    mypass = password[::-1]
+    if (username == password):
+        enable_traffic(session.getIdentity(), session.getIdType())
+
+    return session_status(session)
 
 
 
