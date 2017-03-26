@@ -46,7 +46,7 @@ def session_status(session):
     struct['requirements'] = []
     for i in range(len(reqs)):
         struct['requirements'].append({ reqs[i].getType(): reqs[i].getUrl() })
-    return (json.dumps(struct),200)
+    return (json.dumps(struct),201)
 
 ## request_wants_json will check the accept headers to determine wether a
 ## json response is more appropriate.
@@ -261,7 +261,7 @@ def get_sessions(session_uuid):
 
 # When the client wants to explicitly leave the network, delete the href for the session:
 # DELETE http://<server>/capport/sessions/<session_uuid>
-# 200 OK
+# 204 no content
 @app.route('/capport/sessions/<string:session_uuid>',methods = ['DELETE'] )
 def delete_sessions(session_uuid):
     ## load the session with given session id
@@ -277,6 +277,37 @@ def delete_sessions(session_uuid):
 
     ## return status 204 "no content" instead of 200 "ok"
     return ("", 204)
+
+
+# When the client wants to use the API to login instead of using the login form
+# POST http://<server>/capport/login/<string:session_uuid>
+# 200 OK
+@app.route('/capport/login/<string:session_uuid>', methods = ['POST'] )
+def login_sessions(session_uuid):
+    # Make sure the request is proper json
+    json_request = request.get_json(force=True)
+    if (json_request is None):
+        return (json.dumps({"error": "invalid json payload"}), 400)
+
+    ## load the session with given session_id
+    session = model.session.loadSession(session_uuid)
+    if (session is None):
+        return (json.dumps({ "error": "invalid session" }), 500)
+
+    ## retrieve the username
+    if not ('username' in json_request):
+        return (json.dumps({"error": "username missing"}), 400)
+    else:
+        username = json_request['username']
+
+    ## retrieve the password
+    if not ('password' in json_request):
+        return (json.dumps({"error": "password missing"}), 400)
+    else:
+        password = json_request['password']
+
+
+
 
 ##################
 ## let's do it! ##
